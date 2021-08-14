@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/actor168/m3u8-tool/log"
 	"github.com/actor168/m3u8-tool/pkg"
 )
 
@@ -62,7 +63,7 @@ func (e *Extractor) Extract(file string) (*string, error) {
 
 // download
 func download(url string, fileName string, path string) error {
-	LOGGER.Debugf("")
+	log.LOGGER.Debugf("m3u8 key url: %s", url)
 	res, err := http.Get(url)
 
 	if err != nil {

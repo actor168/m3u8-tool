@@ -1,10 +1,12 @@
 package pkg
 
 import (
+	"os"
+
 	log "github.com/sirupsen/logrus"
 )
 
-var LOGGER log.Logger
+var LOGGER *log.Logger
 
 func Init() {
 	LOGGER = log.New()

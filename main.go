@@ -7,6 +7,7 @@ import (
 	"github.com/actor168/m3u8-tool/pkg/compose"
 	"github.com/actor168/m3u8-tool/pkg/crypto"
 	"github.com/actor168/m3u8-tool/pkg/extract"
+	"github.com/actor168/m3u8-tool/pkg/log"
 )
 
 func main() {
