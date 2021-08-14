@@ -3,18 +3,19 @@ package extract
 import (
 	"bufio"
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 
-	"github.com/actor168/m3u8-tool/log"
 	"github.com/actor168/m3u8-tool/pkg"
+	log "github.com/actor168/m3u8-tool/pkg/log"
 )
 
 type Extractor struct {
-	M3U8 pkg.M3U8
+	M3U8 *pkg.M3U8
 }
 
 func (e *Extractor) Extract(file string) (*string, error) {
@@ -29,15 +30,16 @@ func (e *Extractor) Extract(file string) (*string, error) {
 	keyCrptoMethod := ""
 	keyIv := ""
 	for i, line := range lines {
-		switch strings.Split(line, ":")[0] {
+		lineArr := strings.Split(line, ":")
+		switch lineArr[0] {
 		case "#EXT-X-KEY":
 			// extract key
-			kvs := strings.Split(line, ",")
+			kvs := strings.Split(strings.TrimLeft(line, lineArr[0]), ",")
 			for _, v := range kvs {
 				kv := strings.Split(v, "=")
 				switch kv[0] {
 				case "URI":
-					keyUrl = strings.Trim(kv[1], "\"")
+					keyUrl = strings.Trim(strings.TrimLeft(v, "URI="), "\\\"")
 				case "METHOD":
 					keyCrptoMethod = kv[1]
 				case "IV":
@@ -46,25 +48,28 @@ func (e *Extractor) Extract(file string) (*string, error) {
 			}
 		case "#EXTINF":
 			// save tmp file
-			err := download(e.M3U8.URLPrefix, lines[i+1], tmpDir)
-			if err != nil {
-				return nil, err
+			if !e.M3U8.Downloaded {
+				err := download(e.M3U8.URLPrefix, lines[i+1], tmpDir)
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}
 
-	e.M3U8 = pkg.M3U8{
-		EncryptMethod: keyCrptoMethod,
-		EncryptURL:    keyUrl,
-		EncryptIV:     keyIv,
-	}
+	iv, _ := hex.DecodeString(strings.TrimLeft(keyIv, "0x"))
+	e.M3U8.EncryptMethod = keyCrptoMethod
+	e.M3U8.EncryptURL = keyUrl
+	e.M3U8.EncryptIV = iv
+	e.M3U8.TmpURL = tmpDir
+
 	return nil, nil
 }
 
 // download
 func download(url string, fileName string, path string) error {
-	log.LOGGER.Debugf("m3u8 key url: %s", url)
-	res, err := http.Get(url)
+	log.LOGGER.Debugf("m3u8 key url: %s", url+fileName)
+	res, err := http.Get(url + fileName)
 
 	if err != nil {
 		return err
@@ -82,7 +87,7 @@ func download(url string, fileName string, path string) error {
 }
 
 func (e *Extractor) ToString() {
-	fmt.Printf("m3u8 url: %s\nm3u8 key: %s\nm3u8 iv: %s", e.M3U8.EncryptURL,
+	fmt.Printf("m3u8 url: %s\nm3u8 key: %s\nm3u8 iv: %s\n", e.M3U8.EncryptURL,
 		e.M3U8.EncryptMethod, e.M3U8.EncryptIV)
 }
 
