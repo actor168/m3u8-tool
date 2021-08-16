@@ -21,6 +21,10 @@ type Extractor struct {
 func (e *Extractor) Extract(file string) (*string, error) {
 	tmpDir := file[0:strings.LastIndexByte(file, os.PathSeparator)+1] +
 		"tmp" + string(os.PathSeparator)
+	if _, err := os.Lstat(tmpDir); err == nil {
+		os.Remove(tmpDir)
+	}
+	os.MkdirAll(tmpDir, 0777)
 	lines, err := readLines(file)
 	if err != nil {
 		return nil, err

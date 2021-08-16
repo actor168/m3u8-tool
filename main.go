@@ -12,15 +12,18 @@ import (
 )
 
 var (
-	prefix = flag.String("", "prefix", "download video slice prefix")
-	file   = flag.String("", "file", "file path")
+	prefix     = flag.String("prefix", "", "download video slice prefix")
+	file       = flag.String("filepath", "", "file path")
+	downloaded = flag.Bool("downloaded", false, "if video slice downloaded")
+	outputName = flag.String("output", "", "output file name with format")
 )
 
 func main() {
 	log.Init()
+	flag.Parse()
 	m3u8 := &pkg.M3U8{
 		URLPrefix:  *prefix,
-		Downloaded: true,
+		Downloaded: *downloaded,
 	}
 	// 文件提取解析模块
 	extractor := extract.Extractor{
@@ -36,7 +39,7 @@ func main() {
 	decrypter := crypto.Decryptor{
 		M3U8: m3u8,
 	}
-	suffix := "video.mp4"
+	suffix := *outputName
 	decrypter.Decrypt(&suffix)
 	// 合成模块
 	// composer := compose.Composer{}

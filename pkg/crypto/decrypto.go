@@ -81,6 +81,9 @@ func (d *Decryptor) DecodeVideoSlice(suffix *string) {
 		//Flush将缓存的文件真正写入到文件中
 		write.Flush()
 	}
+
+	os.RemoveAll(d.M3U8.TmpURL)
+
 }
 
 func (d *Decryptor) fetchKey() ([]byte, error) {
